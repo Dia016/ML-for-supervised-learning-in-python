@@ -1,0 +1,57 @@
+Poisson distbn:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   if we want to model no of customers visiting a store between 4PM to 5PM or the no of customers visiting a store btwn 11PM to 4PM we can use poisson distrbn
+import numpy as np
+import matplotlib.pyplot as plt
+s=np.random.poisson(5,10000)        # 5=mean,10000=sample
+counts,bins,ignored=plt.hist(s,14)  # 14=bins plt.hist(s, 14): Creates a histogram of the data s with 14 bins.counts: An array containing the number of data points in each bin.bins: An array containing the edges of the bins.ignored: This variable is ignored here.
+plt.show()
+
+**The use of bins in a histogram helps in visualizing the distribution of data by grouping data points into intervals. 
+Binning involves dividing the entire range of values into a series of intervals and 
+then counting how many data points fall into each interval. **
+
+
+Binomial distrn:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define parameters for the binomial distribution
+n, p = 10, 0.5
+
+# Generate a random sample from a binomial distribution
+s = np.random.binomial(n, p, 1000)
+
+# Create a histogram with 14 bins
+counts, bins, ignored = plt.hist(s, 14)
+
+# Display the histogram
+plt.show()
+
+Normal/Gaussian Distribution:It is the famous bell curve and occurs often in nature.----------------------------------------------------------------------------------------------------------
+
+This code generates a random sample from a normal (Gaussian) distribution using NumPy, 
+creates a histogram with 30 bins to visualize the distribution of the generated data,
+and overlays a theoretical probability density function (PDF) curve on top of the histogram.
+
+import numpy as np
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define parameters for the normal distribution
+mu, sigma = 0, 0.1
+
+# Generate a random sample from a normal distribution
+s = np.random.normal(mu, sigma, 1000)
+
+# Create a histogram with 30 bins
+count, bins, ignored = plt.hist(s, 30, density=True)
+
+# Overlay the theoretical probability density function (PDF) curve
+plt.plot(bins, 1/(sigma * np.sqrt(2 * np.pi)) * np.exp(-(bins - mu)**2 / (2 * sigma**2)), linewidth=2, color="r")
+
+# Display the plot
+plt.show()
+_______________________________________
+BIAS VARIANCE TRADE_OFF
+Error=Biar^2+Variance+Irreducible error
+_______________________________________
