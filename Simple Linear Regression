@@ -1,0 +1,94 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.datasets import make_regression
+import warnings
+warnings.filterwarnings("ignore")
+
+we are going to create a sample data which can be used for regression
+x,y=make_regression(n_features=1,noise=5,n_samples=5000)
+__________________________________________________________________________
+(((The make_regression function is a utility in Python's scikit-learn library (sklearn) that generates a synthetic dataset suitable for regression analysis. Let's break down the parameters used in your example:
+n_features=1: This parameter specifies the number of features (independent variables) in the dataset. In this case, n_features=1 means that the dataset will contain only one feature (also known as a predictor or independent variable).
+noise=5: This parameter controls the amount of noise (random variation) added to the output. A higher noise value leads to greater variability in the data points. In this case, noise=5 means that random noise with a standard deviation of 5 will be added to the output.
+n_samples=5000: This parameter determines the number of samples (data points) in the dataset. In this case, n_samples=5000 means that the dataset will contain 5000 data points.)))
+Noise: In real-world datasets, there is often variability or randomness in the relationship between the independent variables (features) and the dependent variable. This variability is due to factors that are not captured by the features included in the dataset.
+       This randomness is referred to as "noise."
+__________________________________________________________________________
+plot the data using matplotlib.pyplot library.Xlabel and ylabel will give labels to the fig
+plt.xlabel("Feature_X")
+plt.ylabel("Target_Y")
+plt.scatter(x,y,s=5)
+
+Initialize an instance for linear reg now. Name the variable as linear_model
+lm=LinearRegression()
+
+Fit the linear reg now.The input indep var X and target var Y
+lm.fit(x,y)
+
+The model is now trained.Let us have look at the coef for both intercept and the slope of linear reg model
+lm.coef_
+lm.intercept_
+
+We can train this model to predict the value using X and then plot it.
+pred=lm.predict(x)
+plt.scatter(x,y,s=25,label="training")
+plt.scatter(x,pred,s=25,label="prediction")
+plt.xlabel("feature_x")
+plt.ylabel("target_y")
+plt.legend()
+plt.show()
+
+_________________________________________________________________________________
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.datasets import make_regression
+import warnings
+warnings.filterwarnings("ignore")
+
+df=pd.read_csv("/content/House_data.csv")
+df
+df.info()
+df.isnull().sum()
+df.describe()
+
+drop the unwanted variables
+df.drop("Unnamed: 0",axis=1,inplace=True)
+we will now prepare the dataet for model building by separating the indep and target var
+x=df.iloc[:,:1].values
+y=df.iloc[:,-1].values
+
+trian-test split
+from sklearn.model_selection import train_test_split as tts
+x_train,x_test,y_train,y_test=tts(,y,test_size=0.2,random_state=42)
+x_trainshape,y_train.shape
+
+we will 1st test the model on the traning data.we will try predict on training and visualzation the result on it.
+plt.scatter(x_train,y_train,color="r")
+plt.plot(x_train,lm.predict(x_train),color="b")
+plt.title("sq living vs price for training")
+plt.xlabel("sq feet")
+plt.ylabel("house price")
+plt.show()
+
+now lets figure out how good/bad we are doing in the predictions.we will calculate the mse and r2
+from sklearn.metrics import mean_squared_error
+from math import sqrt
+rmse=sqrt(mean_squared_error(y_test,pred))
+rmse
+from sklearn.metrics import r2_score
+r2=r2_score(y_test,pred)
+adj_r2=1-float(len(y)-1)/(len(y)-len(lm.coef_)-1)*(1-r2)
+rmse,adj_r2,lm.coef_,lm.intercept_
+
+now we will make prediction on unseen value of x
+import numpy as np
+x_unseen=np.array([1500]).reshape(1,1)
+lm.predict(x_unseen)
+__________________________________________________________________________________
+
