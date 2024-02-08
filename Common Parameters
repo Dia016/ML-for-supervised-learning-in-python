@@ -1,0 +1,16 @@
+Common Hyperparameters:
+fit_intercept: if we want to calculate intercept for the model, and is not required if data is centered.
+normalize: X will be normalised by substracting mean and dividing by SD
+
+Common Attributes:
+coefficients are the weights for each independent variable.
+intercept is the bias of indep term of linear models.
+
+Common functions:
+fit: trains the model.Takes X & Y as the input value and trains the model.
+predict:once the mmodel is trained,for given X using predict fn Y can be predicted.
+
+Training Model:
+X should be in rows of data format, X.ndim==2
+Y should be 1D for single target & 2D for more than 2 target
+fit fn is used for training the model.
