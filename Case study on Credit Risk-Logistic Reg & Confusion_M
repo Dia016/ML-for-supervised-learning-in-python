@@ -1,0 +1,199 @@
+Case study on Credit Risk
+Context: Credit risk is nothing but the default in payment of any loan by the borrower. In Banking sector this is an important factor to be considered before approving the loan of an applicant.Dream Housing Finance company deals in all home loans. They have presence across all urban, semi urban and rural areas. Customer first apply for home loan after that company validates the customer eligibility for loan.
+
+Objective:
+Company wants to automate the loan eligibility process (real time) based on customer detail provided while filling online application form. These details are Gender, Marital Status, Education, Number of Dependents, Income, Loan Amount, Credit History and others. To automate this process, they have given a problem to identify the customers segments, those are eligible for loan amount so that they can specifically target these customers. Here they have provided a partial data set.
+
+Dataset:
+Variable Description
+Loan_ID Unique Loan ID
+Gender Male/ Female
+Married Applicant married (Y/N)
+Dependents Number of dependents
+Education Applicant Education (Graduate/ Under Graduate)
+Self_Employed Self employed (Y/N)
+ApplicantIncome Applicant income
+CoapplicantIncome Coapplicant income
+LoanAmount Loan amount in thousands
+Loan_Amount_Term Term of loan in months
+Credit_History credit history meets guidelines
+Property_Area Urban/ Semi Urban/ Rural
+Loan_Status Loan approved (Y/N)
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split as tts
+from scipy import stats
+from sklearn import metrics
+import os,sys
+import warnings
+warnings.filterwarnings("ignore")
+%matplotlib inline
+
+df=pd.read_csv("/content/CreditRisk.csv")
+df.head()
+
+df.shape
+df1=df.drop("Loan_ID",axis=1)
+df1.head()
+
+df1.isnull().values
+
+df1['Loan_Amount_Term'].value_counts(normalize=True)
+plt.hist(df1["Loan_Amount_Term"],50)
+
+plt.plot(df1.LoanAmount)
+plt.xlabel("Loan Amount")
+plt.ylabel("Frequency")
+plt.title("Plot of loan amount")
+
+df1.drop(["Loan_Amount_Term"],axis=1,inplace=True)
+df1.head()
+
+Missing value treatment is done next and each variables missing value is replaced with 0. compare the results after replacing missing with median
+df1=df1.fillna("0")
+df1
+
+df1.describe().transpose()
+
+fig=plt.figure(1,figsize=(9,6))
+ax=fig.add_subplot(111)
+ax.boxplot(df1["LoanAmount"])
+
+fig,ax=plt.subplots(figsize=(5,5))
+sns.heatmap(df1.corr(),annot=True)
+
+df1.groupby(["Loan_Status"]).mean()
+
+Now we will convert x and y variable to categorical
+df1['Loan_Status']=df['Loan_Status'].astype("category")
+df1['Credit_History']=df1["Credit_History"].astype("category")
+
+df1.info()
+
+sns.pairplot(df1,hue="Loan_Status")
+
+Check how the data is balanced
+prop_y=df['Loan_Status'].value_counts(normalize=True)
+prop_y
+There seems to be imbalance in the dataset an one class is 31.27% and other class is 68.72%
+
+We will define x and y variable now
+x=df1.drop("Loan_Status",axis=1)
+y=df1["Loan_Status"]
+
+using one-hot coding we will convert categorical into numeric variables
+x=pd.get_dummies(x,drop_first=True)
+
+Using Train test split
+x_train,x_test,y_train,y_test=tts(x,y,test_size=0.30)
+
+Built the actual logistic reg model
+import statsmodels.api as sm
+logit=sm.Logit(y_train,sm.add_constant(x_train))
+lg=logit.fit()
+
+We will now check the summary of the model
+from scipy import stats
+stats.chisqprob=lambda chisq,df:stats.chi2.sf(chisq,df)
+print(lg.summary())
+
+The pseudo r-sq shows only 30.41% of entire variation in the data is explained by the model.It is really not a good model
+
+In the next step we will calculate the odds ratio.
+#Calculate Odds Ratio, probability
+##create a data frame to collate Odds ratio, probability and p-value of the coef
+log_coef = pd.DataFrame(lg.params, columns=['coef'])
+log_coef.loc[:, "Odds_ratio"] = np.exp(log_coef.coef)
+log_coef['probability'] = log_coef['Odds_ratio']/(1+log_coef['Odds_ratio'])
+log_coef['pval']=lg.pvalues
+pd.options.display.float_format = '{:.2f}'.format
+
+# FIlter by significant p-value (pval <0.1) and sort descending by Odds ratio
+log_coef = log_coef.sort_values(by="Odds_ratio", ascending=False)
+pval_filter = log_coef['pval']<=0.1
+log_coef[pval_filter]
+
+#Predict for test data
+#We will use the sklearn library to build the model and make predictions
+
+from sklearn import metrics
+from sklearn.linear_model import LogisticRegression
+
+log_reg = LogisticRegression()
+log_reg.fit(x_train, y_train)
+
+We will use the sklearn library to build the model and make predictions
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
+log_reg=LogisticRegression()
+log_reg.fit(x_train,y_train)
+
+pred_train=log_reg.predict(x_train)
+
+from sklearn.metrics import classification_report,confusion_matrix
+mat_train=confusion_matrix(y_train,pred_train)
+
+print("confusion_matrix= \n",mat_train)
+
+ax= plt.subplot()
+ax.set_ylim(2.0, 0)
+annot_kws = {"ha": 'left',"va": 'top'}
+
+sns.heatmap(mat_train, annot=True, ax = ax, fmt= 'g',annot_kws=annot_kws); #annot=True to annotate cells
+
+# labels, title and ticks
+
+ax.set_xlabel('Predicted labels');
+ax.set_ylabel('True labels'); 
+ax.set_title('Confusion Matrix'); 
+ax.xaxis.set_ticklabels(['Not Approved', 'Approved']); 
+ax.yaxis.set_ticklabels(['Not Approved', 'Approved']);
+
+#Predict for test set
+pred_test = log_reg.predict(x_test)
+
+mat_test = confusion_matrix(y_test,pred_test)
+print("confusion matrix = \n",mat_test)
+
+ax= plt.subplot()
+ax.set_ylim(2.0, 0)
+annot_kws = {"ha": 'left',"va": 'top'}
+
+sns.heatmap(mat_test, annot=True, ax = ax, fmt= 'g',annot_kws=annot_kws); #annot=True to annotate cells
+
+# labels, title and ticks
+
+ax.set_xlabel('Predicted labels');
+ax.set_ylabel('True labels'); 
+ax.set_title('Confusion Matrix'); 
+ax.xaxis.set_ticklabels(['Not Approved', 'Approved']); 
+ax.yaxis.set_ticklabels(['Not Approved', 'Approved']);
+
+#AUC ROC curve
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve
+
+logit_roc_auc = roc_auc_score(y_test, log_reg.predict(x_test))
+fpr, tpr, thresholds = roc_curve(y_test, log_reg.predict_proba(x_test)[:,1])
+plt.figure()
+plt.plot(fpr, tpr, label='Logistic Regression (area = %0.2f)' % logit_roc_auc)
+plt.plot([0, 1], [0, 1],'r--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver operating characteristic')
+plt.legend(loc="lower right")
+plt.savefig('Log_ROC')
+plt.show()
+
+auc_score = metrics.roc_auc_score(y_test, log_reg.predict_proba(x_test)[:,1])
+round( float( auc_score ), 2 )
+score = log_reg.score(x_train, y_train)
+print(score)
+score = log_reg.score(x_test, y_test)
+print(score)
