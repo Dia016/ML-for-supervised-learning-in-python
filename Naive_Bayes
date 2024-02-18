@@ -1,0 +1,117 @@
+Adult Dataset
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("ignore")
+
+data=pd.read_csv("/content/adult.csv", header = None, delimiter=' *, *', engine='python')
+data.head()
+
+data.columns
+
+# Adding headers to the dataframe 
+data.columns = ['age', 'workclass', 'fnlwgt', 'education', 'education_num', 'marital_status', 'occupation', 'relationship',
+                    'race', 'sex', 'capital_gain', 'capital_loss', 'hours_per_week', 'native_country', 'income']
+
+len(data)
+
+data.isnull().sum()
+
+The above output shows that there is no “null” value in our dataset.
+Let’s try to test whether any categorical attribute contains a “?” in it or not. 
+At times there exists “?” or ” ” in place of missing values. 
+Using the below code snippet we are going to test whether adult_df data frame consists of categorical variables with values as “?”
+
+for value in ['workclass','education','marital_status','occupation','relationship','race','sex','native_country','income']:
+    print(value,":", sum(data[value] == '?'))
+
+The output of the above code snippet shows that there are 1836 missing values in workclass attribute. 1843 missing values in occupation attribute and 583 values in native_country attribute.
+Data preprocessing For preprocessing, we are going to make a duplicate copy of our original dataframe.We are duplicating adult_df to adult_df_rev dataframe. Observe that we have used deep copy while copying
+
+df=data.copy(deep=True)
+df.describe()
+
+df.describe(include= 'all')
+
+By using deep=True, you ensure that the new DataFrame (df in this case) is completely independent of the original DataFrame (data).
+
+for value in ['workclass','education','marital_status','occupation','relationship','race','sex','native_country','income']:
+    replaceValue = df.describe(include='all')[value][2]
+    df[value][df[value]=='?'] = replaceValue
+
+Replacement Value Extraction:
+
+replaceValue = df.describe(include='all')[value][2]: This line extracts the replacement value from the descriptive statistics of the column using the describe() method. describe(include='all') computes summary statistics for all columns, including non-numeric ones. [value][2] accesses the third row of the statistics DataFrame, which typically represents the most frequent value in the column (top in the case of categorical columns). Replacing Missing Values:
+
+df[value][df[value]=='?'] = replaceValue: This line replaces the missing values represented by '?' in the specified column (value) of the DataFrame df with the extracted replacement value (replaceValue). It uses boolean indexing to identify rows where the value is '?', and then assigns the replacement value to those rows..
+
+# Encoding
+from sklearn import preprocessing
+# To split the dataset into train and test datasets
+from sklearn.model_selection import train_test_split
+# To model the Gaussian Navie Bayes classifier
+from sklearn.naive_bayes import GaussianNB
+# To calculate the accuracy score of the model
+from sklearn.metrics import accuracy_score
+
+#Hot Encoding
+le=preprocessing.LabelEncoder()
+workclass_category=le.fit_transform(data.workclass)
+education_category = le.fit_transform(data.education)
+marital_category   = le.fit_transform(data.marital_status)
+occupation_category = le.fit_transform(data.occupation)
+relationship_category = le.fit_transform(data.relationship)
+race_category = le.fit_transform(data.race)
+sex_category = le.fit_transform(data.sex)
+native_country_category = le.fit_transform(data.native_country)
+
+#initialize the encoded categorical columns
+df['workclass_category'] = workclass_category
+df['education_category'] = education_category
+df['marital_category'] = marital_category
+df['occupation_category'] = occupation_category
+df['relationship_category'] = relationship_category
+df['race_category'] = race_category
+df['sex_category'] = sex_category
+df['native_country_category'] = native_country_category
+
+df.head()
+
+#drop the old categorical columns from dataframe
+dummy_fields = ['workclass','education','marital_status','occupation','relationship','race', 'sex', 'native_country']
+df = df.drop(dummy_fields, axis = 1)
+
+df = df.reindex(['age', 'workclass_category', 'fnlwgt', 'education_category',
+                                    'education_num', 'marital_category', 'occupation_category',
+                                    'relationship_category', 'race_category', 'sex_category', 'capital_gain',
+                                    'capital_loss', 'hours_per_week', 'native_country_category', 
+                                    'income'], axis= 1)
+df.head(5)
+
+Reindexing Columns:
+
+df.reindex(['age', 'workclass_category', 'fnlwgt', 'education_category', ..., 'income'], axis=1): This line reindexes the columns of the DataFrame df according to the provided list of column names. The axis=1 parameter indicates that reindexing should be performed along columns. New Column Order:
+
+The list ['age', 'workclass_category', 'fnlwgt', 'education_category', ..., 'income'] specifies the new order of columns in the DataFrame. Each column name represents a feature or variable in the dataset. Result:
+
+After reindexing, the DataFrame df will have its columns arranged in the specified order. Head Display:
+
+df.head(5): This line displays the first 5 rows of the DataFrame df after reindexing, allowing you to observe the new column order.
+
+
+# Data Slicing
+x = df.values[:,:14]
+y = df.values[:,14]
+x
+y
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.25, random_state = 5)
+
+clf=GaussianNB()
+clf.fit(x_train,y_train)
+y_pred=clf.predict(x_test)
+y_pred
+
+accuracy_score(y_test,y_pred)
